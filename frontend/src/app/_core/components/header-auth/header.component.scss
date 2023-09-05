@@ -1,0 +1,48 @@
+.logo {
+    width: 120px;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.2);
+    float: left;
+    >a {
+      display: flex;
+      justify-content: center;
+      // align-items: center;
+      img{
+        max-width: 100%;
+      }
+    }
+  }
+
+  [nz-menu] {
+    line-height: 64px;
+    
+  }
+  .ant-menu{
+    display: flex;
+  }
+  .ant-layout-header{
+    background: #fff;
+    
+  }
+  .ant-menu-item{
+    >a{
+      display: block;
+      font-weight: 600;
+    }
+  }
+
+  .div-flex{
+    display: flex;
+    justify-content: space-between;
+    .right{
+      .ant-btn{
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        padding:  4px 11px;
+        .anticon-user{
+          font-size: 16px;
+        }
+      }
+    }
+  }

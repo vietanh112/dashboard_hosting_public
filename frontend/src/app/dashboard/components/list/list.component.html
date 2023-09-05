@@ -1,0 +1,105 @@
+<div class="style-loading" *ngIf="loadingState">
+  <nz-spin nzSimple [nzSize]="'large'"></nz-spin>
+</div>
+
+<div class="inner-content">
+    <div style="margin: 20px 0;display: flex;justify-content: space-between;">
+        <div style="display: flex;align-items: center;">
+          <span class="fw-bold">Tìm kiếm: </span>
+          <div style="margin-left: 10px;">
+            <input nz-input placeholder="Từ khóa" [(ngModel)]="search.keyword" nzSize="default" />
+          </div>
+          <div style="margin-left: 10px;">
+            <nz-select nzShowSearch (nzOnSearch)="searchServer($event)" style="width: 120px;" [(ngModel)]="search.server" (ngModelChange)="serverChange($event)" nzPlaceHolder="Server" [nzServerSearch]="true" [nzLoading]="searchLoading.server">
+              <nz-option [nzValue]="item?.id" [nzLabel]="item?.name" *ngFor="let item of listServer"></nz-option>
+            </nz-select>
+          </div>
+          <div style="margin-left: 10px;">
+            <nz-select nzShowSearch (nzOnSearch)="searchVlan($event)" style="width: 120px;" [(ngModel)]="search.vlan" nzPlaceHolder="Vlan" [nzServerSearch]="true" [nzLoading]="searchLoading.vlan">
+              <nz-option [nzValue]="item.id" [nzLabel]="item.name" *ngFor="let item of listVlan"></nz-option>
+            </nz-select>
+          </div>
+          <div style="margin-left: 10px;">
+            <nz-select nzShowSearch (nzOnSearch)="searchPort($event)" style="width: 120px;" [(ngModel)]="search.port" nzPlaceHolder="Port" [nzServerSearch]="true" [nzLoading]="searchLoading.port">
+              <nz-option [nzValue]="item.id" [nzLabel]="item.port" *ngFor="let item of listPort"></nz-option>
+            </nz-select>
+          </div>
+          <div style="margin-left: 10px;">
+            <nz-select style="width: 120px;" [(ngModel)]="search.status" nzPlaceHolder="Status">
+              <nz-option [nzValue]="item.id" [nzLabel]="item.name" *ngFor="let item of status"></nz-option>
+            </nz-select>
+          </div>
+          <div style="margin-left: 10px;">
+            <button nz-button nzType="primary" (click)="getList()">
+              <span nz-icon nzType="search"></span>
+              Tìm kiếm
+            </button>
+          </div>
+        </div>
+        <div>
+          <button *ngIf="currentUser?.roleId < 3" nz-button [nzType]="'primary'" [nzSize]="sizeButton" (click)="showModalCreate()"><span>Tạo mới Hosting</span></button>
+        </div>
+    </div>
+    <nz-table #nzTable [nzData]="listHosting" nzTableLayout="fixed" nzShowSizeChanger [nzShowPagination]="false">
+        <thead>
+          <tr>
+            <th class="text-center" style="width: 80px;">STT</th>
+            <th class="text-center">IP Address</th>
+            <th>Hostname</th>
+            <th class="text-center">Port</th>
+            <th class="text-center" style="width: 120px;">Status</th>
+            <th class="text-center">Server</th>
+            <th class="text-center" style="width: 120px;">Options</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let data of nzTable.data; let i = index">
+            <td class="text-center">{{ i + 1}}</td>
+            <td class="text-center"  (click)="showModalInfor(data)"><a>{{ data.ipaddress }}</a></td>
+            <td>{{ data.hostname }}</td>
+            <td class="text-center">
+              {{data.portName}}
+            </td>
+            <td class="text-center">
+              <ng-container *ngFor="let i of tag">
+                <nz-tag [nzColor]="i.name" *ngIf="data.status == i.status">{{i.msg}}</nz-tag>
+              </ng-container>
+            </td>
+            <td class="text-center">
+              {{data.serverName}}
+            </td>
+            <td class="text-center">
+              <button nz-button nz-dropdown [nzDropdownMenu]="menu4" style="border-radius: 50%;">
+
+                <i nz-icon nzType="ellipsis" nzTheme="outline"></i>
+              </button>
+              <nz-dropdown-menu #menu4="nzDropdownMenu">
+                <ul nz-menu>
+                  <li nz-menu-item (click)="showModalInfor(data)">
+                    <span style="margin-right: 12px;"><i nz-icon nzType="info" nzTheme="outline"></i></span>
+                    Thông tin Hosting
+                  </li>
+                  <li *ngIf="currentUser?.roleId < 3" nz-menu-item (click)="showModalUpdate(data)">
+                    <span style="margin-right: 12px;"><i nz-icon nzType="edit" nzTheme="outline"></i></span>
+                    Chỉnh sửa Hosting
+                  </li>
+                  <li *ngIf="currentUser?.roleId < 3" nz-menu-item (click)="showConfirmDelete(data.id)">
+                    <span style="margin-right: 12px;"><i nz-icon nzType="rest" nzTheme="outline"></i></span>
+                    Xóa Hosting
+                  </li>
+                </ul>
+              </nz-dropdown-menu>
+            </td>
+          </tr>
+        </tbody>
+      </nz-table>
+      <!-- <ng-template #totalTemplate let-total> Total {{listHosting.length}} / {{ totalList }} items </ng-template> -->
+      <div style="margin-top: 1.5rem;display: flex;justify-content: flex-end;">
+        <nz-pagination [nzPageIndex]="page" [nzTotal]="totalHosting" nzShowSizeChanger [nzPageSize]="10" [nzPageSizeOptions]="sizePage" (nzPageIndexChange)="pageIndexChange($event)" (nzPageSizeChange)="pageSizeChange($event)"></nz-pagination>
+      </div>
+</div>
+<app-dashboard-modal-infor [(checkVisibleInfor)]=checkVisibleInfor  [dataHosting]=hosting></app-dashboard-modal-infor>
+<app-dashboard-modal-create [(checkVisibleCreate)]=checkVisibleCreate (checkVisibleCreateChange) = "createHosting($event)" [listServer]=listServer></app-dashboard-modal-create>
+<app-dashboard-modal-update [(checkVisibleUpdate)]=checkVisibleUpdate (checkVisibleUpdateChange) = "updateHosting($event)" [hosting]=hosting [listServer]=listServer></app-dashboard-modal-update>
+<!-- <app-dashboard-modal-create-vlan [(checkVisibleCreateVlan)]=checkVisibleCreateVlan (checkVisibleCreateVlanChange) = "createVlan($event)"></app-dashboard-modal-create-vlan> -->
+<!-- <app-dashboard-modal-create-server [(checkVisibleCreateServer)]=checkVisibleCreateServer (checkVisibleCreateServerChange) = "createServer($event)"></app-dashboard-modal-create-server> -->

@@ -1,0 +1,116 @@
+<div class="style-loading" *ngIf="loadingState">
+    <nz-spin nzSimple [nzSize]="'large'"></nz-spin>
+  </div>
+
+  <div class="inner-content">
+      <div style="margin: 20px 0;display: flex;justify-content: space-between;">
+          <div style="display: flex;align-items: center;">
+            <span class="fw-bold">Tìm kiếm: </span>
+            <div style="margin-left: 10px;">
+              <input nz-input placeholder="Từ khóa" [(ngModel)]="search.keyword" nzSize="default" />
+            </div>
+            <div style="margin-left: 10px;">
+              <nz-select nzShowSearch (nzOnSearch)="searchServer($event)" style="width: 120px;" [(ngModel)]="search.server" nzPlaceHolder="Server" [nzLoading]="searchLoading">
+                <nz-option [nzValue]="data?.id" [nzLabel]="data?.name" *ngFor="let data of listServer"></nz-option>
+              </nz-select>
+            </div>
+            <div style="margin-left: 10px;">
+              <nz-select style="width: 120px;" [(ngModel)]="search.status" nzPlaceHolder="Status">
+                <nz-option [nzValue]="item.id" [nzLabel]="item.name" *ngFor="let item of status"></nz-option>
+              </nz-select>
+            </div>
+
+            <div style="margin-left: 10px;">
+              <button nz-button nzType="primary" (click)="getList()">
+                <span nz-icon nzType="search"></span>
+                Tìm kiếm
+              </button>
+            </div>
+          </div>
+          <div>
+            <button *ngIf="currentUser?.roleId < 3" nz-button [nzType]="'primary'" [nzSize]="sizeButton" (click)="showModalCreatePort()"><span>Tạo mới Port</span></button>
+          </div>
+      </div>
+      <nz-table #nzTable [nzData]="listPort" nzTableLayout="fixed" nzShowSizeChanger  [nzShowPagination]="false">
+          <thead>
+            <tr>
+              <th class="text-center" nzWidth="60px"></th>
+              <th class="text-center" nzWidth="80px">STT</th>
+              <th class="text-center">PORT</th>
+              <th class="text-center">Server</th>
+              <th>Thông tin</th>
+              <th class="text-center" nzWidth="120px">Status</th>
+              <th class="text-center" style="width: 120px;">Options</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let data of nzTable.data; let i = index">
+              <tr>
+                <td [nzExpand]="expandSet.has(data.id)" class="text-center" (nzExpandChange)="onExpandChange(data.id, $event)"></td>
+                <td class="text-center">{{ i + 1}}</td>
+                <td class="text-center">{{ data.port }}</td>
+
+                <td class="text-center">
+                  {{data.serverName}}
+                </td>
+                <td>
+                  {{data.description}}
+                </td>
+                <td class="text-center">
+                  <ng-container *ngFor="let i of tag">
+                    <nz-tag [nzColor]="i.name" *ngIf="data.status == i.status">{{i.msg}}</nz-tag>
+                  </ng-container>
+                </td>
+                <td class="text-center">
+                  <button nz-button nz-dropdown [nzDropdownMenu]="menu4" style="border-radius: 50%;">
+                    <i nz-icon nzType="ellipsis" nzTheme="outline"></i>
+                  </button>
+                  <nz-dropdown-menu #menu4="nzDropdownMenu">
+                    <ul nz-menu>
+                      <li *ngIf="currentUser?.roleId < 3" nz-menu-item (click)="showModalUpdatePort(data)">
+                        <span style="margin-right: 12px;"><i nz-icon nzType="edit" nzTheme="outline"></i></span>
+                        Chỉnh sửa Port
+                      </li>
+                      <li *ngIf="currentUser?.roleId < 3" nz-menu-item (click)="showConfirmDelete(data.id)">
+                        <span style="margin-right: 12px;"><i nz-icon nzType="rest" nzTheme="outline"></i></span>
+                        Xóa Port
+                      </li>
+                    </ul>
+                  </nz-dropdown-menu>
+                </td>
+              </tr>
+              <ng-container *ngIf="data?.showListHosting && data?.listHosting.length">
+                <tr>
+                  <td class="fw-bold" colspan="7">List Hosting</td>
+                </tr>
+                <tr>
+                  <td class="text-center fw-bold" colspan="2">STT</td>
+                  <td class="text-center fw-bold">Hosting</td>
+                  <td class="text-center fw-bold">IP Address</td>
+                  <td class="fw-bold" colspan="2">Thông tin</td>
+                  <td class="text-center fw-bold">Status</td>
+                </tr>
+                <tr class="ant-table-expanded-row" *ngFor="let host of data?.listHosting; let i = index">
+                  <td class="text-center" colspan="2">{{i + 1}}</td>
+                  <td class="text-center">{{host.hostname}}</td>
+                  <td class="text-center">{{host.ipaddress}}</td>
+                  <td colspan="2">{{host.information}}</td>
+                  <td class="text-center">
+                    <ng-container *ngFor="let i of tag">
+                      <nz-tag [nzColor]="i.name" *ngIf="data.status == i.status">{{i.msg}}</nz-tag>
+                    </ng-container>
+                  </td>
+
+                </tr>
+              </ng-container>
+            </ng-container>
+
+          </tbody>
+        </nz-table>
+
+        <div style="margin-top: 1.5rem;display: flex;justify-content: flex-end;">
+          <nz-pagination [nzPageIndex]="page" [nzTotal]="totalPort" nzShowSizeChanger [nzPageSize]="10" [nzPageSizeOptions]="sizePage" (nzPageIndexChange)="pageIndexChange($event)" (nzPageSizeChange)="pageSizeChange($event)"></nz-pagination>
+        </div>
+  </div>
+  <app-dashboard-modal-update-port [(checkVisibleUpdatePort)]=checkVisibleUpdatePort (checkVisibleUpdatePortChange) = "updatePort($event)" [port]=port [listServer]=listServer></app-dashboard-modal-update-port>
+  <app-dashboard-modal-create-port [(checkVisibleCreatePort)]=checkVisibleCreatePort (checkVisibleCreatePortChange) = "createPort($event)" [listServer]=listServer></app-dashboard-modal-create-port>
